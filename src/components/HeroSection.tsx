@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 
 const poeticLines = [
-  "Hey",
+  "Hey Sakshi,",
 "This isn’t a story",
 "or a perfect beginning…",
 "just something real",
