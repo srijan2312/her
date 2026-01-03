@@ -33,16 +33,14 @@ export default function ConstellationSection({ paused = false }: { paused?: bool
   // Heart shape points (normalized)
   const heartShape = useCallback(() => {
     const points: { x: number; y: number }[] = [];
-    const numPoints = 20;
-    
+    const numPoints = 40; // smoother heart
     for (let i = 0; i < numPoints; i++) {
       const t = (i / numPoints) * Math.PI * 2;
-      // Parametric heart equation
-      const x = 16 * Math.pow(Math.sin(t), 3);
-      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      // Classic heart: wider and less tall
+      const x = 16 * Math.pow(Math.sin(t), 3) * 1.1;
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * 0.9;
       points.push({ x: x / 20, y: y / 20 });
     }
-    
     return points;
   }, []);
 
@@ -55,36 +53,33 @@ export default function ConstellationSection({ paused = false }: { paused?: bool
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // Create stars in random positions
-    const numStars = 25;
+    // Place all stars on the heart curve
+    const heartPoints = heartShape();
+    const numStars = heartPoints.length;
     const stars: Star[] = [];
-    
     for (let i = 0; i < numStars; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 100 + Math.random() * 200;
-      const x = centerX + Math.cos(angle) * radius;
-      const y = centerY + Math.sin(angle) * radius;
-      
+      const pt = heartPoints[i];
+      const x = centerX + pt.x * (Math.min(rect.width, rect.height) * 0.35);
+      const y = centerY + pt.y * (Math.min(rect.width, rect.height) * 0.35);
       stars.push({
         x,
         y,
         baseX: x,
         baseY: y,
-        size: 2 + Math.random() * 3,
-        opacity: 0.3 + Math.random() * 0.4,
+        size: 3,
+        opacity: 0.7,
       });
     }
-    
     starsRef.current = stars;
-    
-    // Create potential connections (sparse)
+
+    // Connect each star to its next and previous (outline), and a few across for network
     const connections: Connection[] = [];
     for (let i = 0; i < numStars; i++) {
-      for (let j = i + 1; j < numStars; j++) {
-        if (Math.random() > 0.85) {
-          connections.push({ from: i, to: j, opacity: 0 });
-        }
-      }
+      // Outline
+      connections.push({ from: i, to: (i + 1) % numStars, opacity: 0 });
+      // Network: connect to every 5th neighbor for constellation effect
+      connections.push({ from: i, to: (i + 5) % numStars, opacity: 0 });
+      connections.push({ from: i, to: (i + numStars - 5) % numStars, opacity: 0 });
     }
     connectionsRef.current = connections;
   }, []);
@@ -109,8 +104,9 @@ export default function ConstellationSection({ paused = false }: { paused?: bool
     const heartPoints = heartShape();
     const rect = canvas.getBoundingClientRect();
     const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const heartScale = Math.min(rect.width, rect.height) * 0.35;
+    // Move the heart down by 25% of the canvas height and reduce scale for full visibility and no overlap
+    const centerY = rect.height / 2 + rect.height * 0.25;
+    const heartScale = Math.min(rect.width, rect.height) * 0.16;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -213,17 +209,17 @@ export default function ConstellationSection({ paused = false }: { paused?: bool
   return (
     <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent z-0" />
       
       {/* Canvas for constellation */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full z-10 pointer-events-none"
         style={{ opacity: isInView ? 1 : 0, transition: 'opacity 1s ease' }}
       />
 
       {/* Content */}
-      <div className="relative z-10 text-center section-padding max-w-2xl">
+      <div className="relative z-20 text-center section-padding max-w-2xl">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
