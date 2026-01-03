@@ -230,12 +230,10 @@ export default function AppreciationCards() {
           Little Things
         </span>
         <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground mb-6">
-          What I notice about{' '}
+          What I want to tell{' '}
           <span className="text-gradient italic">you</span>
         </h2>
-        <p className="text-muted-foreground text-lg font-body">
-          The small moments that reveal who you really are.
-        </p>
+        
       </motion.div>
 
       {/* Cards grid */}
